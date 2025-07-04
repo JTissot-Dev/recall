@@ -1,0 +1,80 @@
+name: "recall"
+
+services:
+
+  frontend:
+    container_name: recall-frontend-dev
+    build: ./frontend
+    command: sh -c "npm run dev"
+    ports:
+      - 3000:3000
+    env_file: ./frontend/.env.dev
+    networks:
+      - recall-dev-network
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    environment:
+      - WDS_SOCKET_HOST=127.0.0.1
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+  
+  backend:
+    container_name: recall-backend-dev
+    hostname: recall-backend-dev
+    build: ./backend
+    command: sh -c "fastapi dev app/main.py --host 0.0.0.0 --port 8000 --reload"
+    env_file: ./backend/.env.dev
+    volumes:
+      - ./backend/app:/code/app
+    restart: always
+    ports:
+      - 8001:8000
+    networks:
+      - recall-dev-network
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"
+        max-size: "10m"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    container_name: recall-database-dev
+    image: postgres:16
+    env_file: ./backend/.env.dev
+    restart: always
+    ports:
+      - 5432:5432
+    networks:
+      - recall-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - ./data/database:/var/lib/postgresql/data
+
+  adminer:
+    container_name: adminer
+    image: adminer
+    restart: always
+    ports:
+      - 8082:8080
+    networks:
+      - recall-dev-network
+    environment:
+      ADMINER_DESIGN: pappu687
+    depends_on:
+      database:
+        condition: service_healthy
+
+networks:
+  recall-dev-network:
+    driver: bridge
