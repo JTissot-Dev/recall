@@ -1,6 +1,6 @@
 import ollama
 from typing import List
-from app.schemas.chat import ChatMessage, ChatResponse
+from app.schemas import ChatMessage, ChatResponse
 from app.core.config import settings
 from app.protocols.i_ollama_provider import IOllamaProvider
 

@@ -1,7 +1,7 @@
 from sqlmodel import Session
 from typing import List, Optional
 from app.protocols.i_ollama_provider import IOllamaProvider
-from app.schemas.chat import ChatMessage, ChatResponse
+from app.schemas import ChatMessage, ChatResponse
 
 
 class ChatService:

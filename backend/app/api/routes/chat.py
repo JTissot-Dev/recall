@@ -3,7 +3,7 @@ from fastapi import APIRouter, WebSocket
 from app.core.database import SessionDep
 from app.services.chat_service import ChatService
 from app.providers.ollama_provider import OllamaProvider
-from app.schemas.chat import ChatWebSocketResponse
+from app.schemas import ChatWebSocketResponse
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -27,7 +27,7 @@ async def websocket_endpoint(websocket: WebSocket, session: SessionDep):
     try:
         while True:
             client_msg = await websocket.receive_text()
-            bot_msg = chat_service.process_llm_message(client_msg, chat_history)
+            bot_msg = await chat_service.process_llm_message(client_msg, chat_history)
             chat_history = bot_msg.updated_history
 
             response = ChatWebSocketResponse(
