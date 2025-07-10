@@ -8,7 +8,6 @@ class ChatService:
     def __init__(
             self, 
             ollama_provider: Optional[IOllamaProvider] = None, 
-            session: Optional[Session] = None
         ):
         self.ollama_provider = ollama_provider
 
@@ -18,4 +17,5 @@ class ChatService:
         """
         bot_msg = self.ollama_provider.process_chat_message(client_msg, chat_history)
         return bot_msg
+
     
