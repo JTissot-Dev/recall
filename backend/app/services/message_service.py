@@ -1,15 +1,22 @@
 from sqlmodel import Session
 from app.models import Message
+from app.schemas import MessageCreate, MessageResponse
+
 
 class MessageService:
     def __init__(self, session: Session):
         self.session = session
-    
-    def create_many(self, messages: list[Message]) -> list[Message]:
+
+    def create(self, message_create: MessageCreate) -> MessageResponse:
         """
         Create multiple messages in the database.
         """
-        self.session.add_all(messages)
+        message = Message(
+            **message_create.model_dump()
+        )
+        self.session.add(message)
         self.session.commit()
-        self.session.refresh(messages)
-        return messages
+        self.session.refresh(message)
+        return MessageResponse(
+            **message.model_dump()
+        )

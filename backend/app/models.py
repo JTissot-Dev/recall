@@ -1,14 +1,9 @@
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID, uuid4
-from enum import Enum
 from sqlmodel import SQLModel, Field, Relationship
 from app.core.utils import utc_now
-
-
-class Role(str, Enum):
-    user = "user"
-    assistant = "assistant"
+from app.enums import Role
 
 
 class Conversation(SQLModel, table=True):
@@ -30,4 +25,6 @@ class Message(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utc_now)
 
     conversation_id: UUID = Field(foreign_key="conversation.id")
-    conversation: Optional[Conversation] = Relationship(back_populates="messages")
+    conversation: Optional[Conversation] = Relationship(
+        back_populates="messages"
+    )
