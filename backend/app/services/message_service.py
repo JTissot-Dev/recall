@@ -1,4 +1,5 @@
 from sqlmodel import Session
+from typing import List
 from app.models import Message
 from app.schemas import MessageCreate, MessageResponse
 
