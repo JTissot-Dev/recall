@@ -7,6 +7,7 @@ from app.schemas.message import MessageResponse
 class ConversationCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100)
 
+
 class ConversationResponse(BaseModel):
     id: UUID
     title: str

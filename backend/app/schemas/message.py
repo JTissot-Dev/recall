@@ -9,6 +9,7 @@ class MessageCreate(BaseModel):
     content: str
     conversation_id: UUID
 
+
 class MessageResponse(BaseModel):
     id: UUID
     role: Role
