@@ -1,10 +1,10 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock
 import pytest
 from app.main import app
 from app.core.database import get_session
 
 
-mock_session = Mock()
+mock_session = MagicMock()
 
 
 def override_get_session():
@@ -23,3 +23,8 @@ def mock_db_session():
     Fixture to provide a mock database session.
     """
     return mock_session
+
+@pytest.fixture(autouse=True)
+def reset_mocks():
+    """Reset all mocks before each test."""
+    mock_session.reset_mock()
