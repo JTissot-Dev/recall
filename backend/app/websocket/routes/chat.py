@@ -2,8 +2,10 @@ import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Optional
+from app.core.database import SessionDep
 from app.core.websocket.connection_manager import manager
-from app.services.deps import ChatServiceDep
+from app.services.chat_service import ChatService
+from app.providers.deps import OllamaProviderDep
 from app.schemas import ChatWebSocketResponse
 
 
@@ -15,20 +17,22 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 @router.websocket("")
 async def websocket_endpoint(
     websocket: WebSocket,
-    chat_service: ChatServiceDep,
+    session: SessionDep,
+    ollama_provider: OllamaProviderDep,
     conversation_id: Optional[str] = None,
 ):
     """
     WebSocket endpoint for real-time chat.
     """
     await manager.connect(websocket)
-    conversation = chat_service.init_chat_session(conversation_id)
+    chat_service = ChatService(ollama_provider)
+    conversation = chat_service.init_chat_session(session, conversation_id)
 
     try:
         while True:
             client_msg = await websocket.receive_text()
             bot_msg = chat_service.process_chat_session(
-                client_msg, conversation
+                session, client_msg, conversation
             )
             response = ChatWebSocketResponse(
                 type="message",

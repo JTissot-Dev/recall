@@ -1,5 +1,7 @@
+from sqlmodel import Session
 from typing import List, Optional
 import uuid
+from app.models import Conversation
 from app.protocols.i_ollama_provider import IOllamaProvider
 from app.schemas import (
     ChatMessage,
@@ -8,47 +10,44 @@ from app.schemas import (
     MessageCreate,
     ConversationCreate,
 )
-from app.services.conversation_service import ConversationService
-from app.services.message_service import MessageService
+from app.repositories.conversation_repository import create_conversation, read_conversation_by_id
+from app.repositories.message_repository import create_message
 
 
 class ChatService:
     def __init__(
         self,
         ollama_provider: IOllamaProvider,
-        conversation_service: ConversationService,
-        message_service: MessageService,
     ):
         self.ollama_provider = ollama_provider
-        self.conversation_service = conversation_service
-        self.message_service = message_service
         self.chat_history: List[ChatMessage] = []
 
     def init_chat_session(
-        self, conversation_id: Optional[str] = None
-    ) -> ConversationResponse:
+        self, session: Session, conversation_id: Optional[str] = None
+    ) -> Conversation:
         """
         Initialize a chat session.
         """
         if conversation_id:
-            conversation = self.conversation_service.read_by_id(conversation_id)
+            conversation = read_conversation_by_id(session, conversation_id)
             self.chat_history.extend(
                 ChatMessage.model_validate(msg) for msg in conversation.messages
             )
         else:
             title = f"Conversation {uuid.uuid4().hex[:6]}"
-            conversation = self.conversation_service.create(
-                ConversationCreate(title=title)
+            conversation = create_conversation(
+                session, ConversationCreate(title=title)
             )
         return conversation
 
     def process_chat_session(
-        self, client_msg: str, conversation: ConversationResponse
+        self, session: Session, client_msg: str, conversation: ConversationResponse
     ) -> ChatResponse:
         """
         Handle a complete chat session.
         """
-        user_message = self.message_service.create(
+        user_message = create_message(
+            session,
             MessageCreate(
                 conversation_id=conversation.id,
                 role="user",
@@ -62,7 +61,8 @@ class ChatService:
             client_msg, self.chat_history
         )
 
-        assistant_message = self.message_service.create(
+        assistant_message = create_message(
+            session,
             MessageCreate(
                 conversation_id=conversation.id,
                 role="assistant",

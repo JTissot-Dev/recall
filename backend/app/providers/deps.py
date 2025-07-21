@@ -10,4 +10,5 @@ def get_ollama_provider(temperature: float = 0.7) -> IOllamaProvider:
     """
     return OllamaProvider(temperature=temperature)
 
+
 OllamaProviderDep = Annotated[IOllamaProvider, Depends(get_ollama_provider)]

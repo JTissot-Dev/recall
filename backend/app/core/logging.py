@@ -92,7 +92,7 @@ def setup_logging(log_level: Optional[str] = None) -> None:
     logging.getLogger("alembic").setLevel(logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
-    
+
     # Log de confirmation
     logger = logging.getLogger(__name__)
     logger.info(
