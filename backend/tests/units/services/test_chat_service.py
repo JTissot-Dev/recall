@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 from pytest import fixture
 from app.models import Conversation, Message
-from app.schemas import ConversationCreate
+from app.schemas import ConversationCreate, ChatResponse, ChatMessage
 from app.services.chat_service import ChatService
 from app.protocols.i_ollama_provider import IOllamaProvider
 
@@ -45,7 +45,8 @@ def test_init_chat_session_with_existing_conversation(
     assert conversation == mock_db_conversation
     assert chat_service.chat_history[0].role == mock_message.role
     assert chat_service.chat_history[0].content == mock_message.content
-    
+
+
 @patch('app.services.chat_service.create_conversation')
 @patch('app.services.chat_service.uuid.uuid4')
 def test_init_chat_session_with_new_conversation(
@@ -78,4 +79,64 @@ def test_init_chat_session_with_new_conversation(
     create_conversation.assert_called_once_with(mock_db_session, mock_create_conversation)
     assert conversation == mock_db_conversation
     assert chat_service.chat_history == []
+
+
+@patch('app.services.chat_service.create_message')
+def test_process_chat_session(
+    mock_create_message, mock_db_session, mock_ollama_provider
+):
+    # Arrange
+    chat_service = ChatService(mock_ollama_provider)
+
+    client_message = "What is the weather today?"
+    assistant_response = "The weather is sunny."
+
+    mock_db_conversation = Conversation(
+        id=UUID("488098a9-4c50-4786-87be-89628cb1a5b4"),
+        title="Test chat session conversation",
+        messages=[],
+        created_at=datetime.now(),
+        updated_at=datetime.now()
+    )
+
+    mock_user_message = Message(
+        id=UUID("488098a9-4c50-4786-87be-89628cb1a5b2"),
+        role="user",
+        content=client_message,
+        conversation_id=UUID("488098a9-4c50-4786-87be-89628cb1a5b4"),
+        created_at=datetime.now(),
+    )
+    mock_assistant_message = Message(
+        id=UUID("488098a9-4c50-4786-87be-89628cb1a5b3"),
+        role="assistant",
+        content=assistant_response,
+        conversation_id=UUID("488098a9-4c50-4786-87be-89628cb1a5b4"),
+        created_at=datetime.now(),
+    )
+    mock_create_message.side_effect = [mock_user_message, mock_assistant_message]
     
+    mock_message_history = [
+            ChatMessage(
+                role=mock_user_message.role,
+                content=mock_user_message.content
+            ),
+            ChatMessage(
+                role=mock_assistant_message.role,
+                content=mock_assistant_message.content
+            )
+        ]
+    
+    mock_chat_message = ChatResponse(
+        response=assistant_response,
+        updated_history=mock_message_history
+    )
+
+    mock_ollama_provider.process_chat_message.return_value = mock_chat_message
+
+    # Act
+    response = chat_service.process_chat_session(mock_db_session, client_message, mock_db_conversation)
+
+    # Assert
+    assert mock_create_message.call_count == 2
+    assert response == mock_chat_message
+    assert chat_service.chat_history == mock_message_history

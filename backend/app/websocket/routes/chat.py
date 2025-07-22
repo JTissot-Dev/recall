@@ -15,7 +15,7 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
 @router.websocket("")
-async def websocket_endpoint(
+async def websocket_chat_endpoint(
     websocket: WebSocket,
     session: SessionDep,
     ollama_provider: OllamaProviderDep,

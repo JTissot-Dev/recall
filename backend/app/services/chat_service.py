@@ -41,7 +41,7 @@ class ChatService:
         return conversation
 
     def process_chat_session(
-        self, session: Session, client_msg: str, conversation: ConversationResponse
+        self, session: Session, client_msg: str, conversation: Conversation
     ) -> ChatResponse:
         """
         Handle a complete chat session.
