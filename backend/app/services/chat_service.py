@@ -6,11 +6,13 @@ from app.protocols.i_ollama_provider import IOllamaProvider
 from app.schemas import (
     ChatMessage,
     ChatResponse,
-    ConversationResponse,
     MessageCreate,
     ConversationCreate,
 )
-from app.repositories.conversation_repository import create_conversation, read_conversation_by_id
+from app.repositories.conversation_repository import (
+    create_conversation,
+    read_conversation_by_id,
+)
 from app.repositories.message_repository import create_message
 
 
@@ -52,7 +54,7 @@ class ChatService:
                 conversation_id=conversation.id,
                 role="user",
                 content=client_msg,
-            )
+            ),
         )
 
         self.chat_history.append(ChatMessage.model_validate(user_message))
@@ -67,7 +69,7 @@ class ChatService:
                 conversation_id=conversation.id,
                 role="assistant",
                 content=bot_msg.response,
-            )
+            ),
         )
         self.chat_history.append(ChatMessage.model_validate(assistant_message))
 

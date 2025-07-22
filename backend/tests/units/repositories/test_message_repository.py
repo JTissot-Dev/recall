@@ -8,7 +8,7 @@ def test_create_message(mock_db_session):
     message_create = MessageCreate(
         content="Hello world",
         role="user",
-        conversation_id=UUID("488098a9-4c50-4786-87be-89628cb1a5b1")
+        conversation_id=UUID("488098a9-4c50-4786-87be-89628cb1a5b1"),
     )
 
     # Act
@@ -21,6 +21,5 @@ def test_create_message(mock_db_session):
     assert db_message.content == message_create.content
     assert db_message.role == message_create.role
     assert db_message.conversation_id == message_create.conversation_id
-    assert hasattr(db_message, 'id') 
-    assert hasattr(db_message, 'created_at')
-    
+    assert hasattr(db_message, "id")
+    assert hasattr(db_message, "created_at")

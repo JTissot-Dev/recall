@@ -25,14 +25,17 @@ def mock_db_session():
     """
     return mock_session
 
+
 @pytest.fixture(scope="session")
 def test_client():
     return TestClient(app)
+
 
 @pytest.fixture
 def client(test_client):
     # Configuration pour intégration
     yield test_client
+
 
 @pytest.fixture(autouse=True)
 def reset_mocks():
