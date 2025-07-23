@@ -1,6 +1,6 @@
 from .chat import ChatMessage, ChatResponse, ChatWebSocketResponse
 from .conversation import ConversationCreate, ConversationResponse
-from .message import MessageCreate, MessageResponse
+from .message import MessageCreate, MessageResponse, MessagesPaginateResponse
 
 __all__ = [
     "ChatMessage",
@@ -10,4 +10,5 @@ __all__ = [
     "ConversationResponse",
     "MessageCreate",
     "MessageResponse",
+    "MessagesPaginateResponse",
 ]

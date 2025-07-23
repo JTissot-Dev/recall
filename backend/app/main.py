@@ -25,4 +25,5 @@ app.include_router(ws_router)
 
 @app.get("/")
 def read_root():
+    print("test")
     return {"Welcome": "This is the root endpoint of the API PIT Web Service."}
