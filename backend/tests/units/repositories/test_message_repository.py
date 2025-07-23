@@ -32,7 +32,7 @@ def test_create_message(mock_db_session):
 
 
 def test_read_cursor_paginate_message_without_before(mock_db_session):
-    #Arrange
+    # Arrange
     conversation_id = "488098a9-4c50-4786-87be-89628cb1a5b1"
     limit = 20
     before = None
@@ -42,24 +42,21 @@ def test_read_cursor_paginate_message_without_before(mock_db_session):
             content="Message 1",
             role="user",
             conversation_id=conversation_id,
-            created_at=datetime(2024, 1, 15, 10, 0, 0)
+            created_at=datetime(2024, 1, 15, 10, 0, 0),
         ),
         Message(
             content="Message 2",
             role="assistant",
             conversation_id=conversation_id,
-            created_at=datetime(2024, 1, 15, 10, 30, 0)
-        )
+            created_at=datetime(2024, 1, 15, 10, 30, 0),
+        ),
     ]
 
     mock_db_session.exec.return_value.all.return_value = mock_messages
 
     # Act
     messages = read_cursor_paginate_message(
-        mock_db_session,
-        conversation_id,
-        limit=limit,
-        before=before
+        mock_db_session, conversation_id, limit=limit, before=before
     )
 
     # Assert
@@ -70,7 +67,7 @@ def test_read_cursor_paginate_message_without_before(mock_db_session):
 
 
 def test_read_cursor_paginate_message_with_before(mock_db_session):
-    #Arrange
+    # Arrange
     conversation_id = "488098a9-4c50-4786-87be-89628cb1a5b1"
     limit = 20
     before = datetime(2024, 1, 15, 10, 30, 0)
@@ -80,7 +77,7 @@ def test_read_cursor_paginate_message_with_before(mock_db_session):
             content="Message 1",
             role="user",
             conversation_id=conversation_id,
-            created_at=datetime(2024, 1, 15, 10, 0, 0)
+            created_at=datetime(2024, 1, 15, 10, 0, 0),
         )
     ]
 
@@ -88,14 +85,10 @@ def test_read_cursor_paginate_message_with_before(mock_db_session):
 
     # Act
     messages = read_cursor_paginate_message(
-        mock_db_session,
-        conversation_id,
-        limit=limit,
-        before=before
+        mock_db_session, conversation_id, limit=limit, before=before
     )
 
     # Assert
     mock_db_session.exec.assert_called_once()
     assert len(messages) == len(mock_messages)
     assert messages[0].content == "Message 1"
-    

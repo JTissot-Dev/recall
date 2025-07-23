@@ -11,7 +11,6 @@ def read_paginate_message(
     limit: int = 20,
     before: Optional[str] = None,
 ) -> MessagesPaginateResponse:
-
     before_datetime = parse_datetime(before) if before else None
     messages = read_cursor_paginate_message(
         session, conversation_id, limit, before_datetime
