@@ -11,7 +11,7 @@ router = APIRouter(prefix="/messages", tags=["Messages"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/", response_model=MessagesPaginateResponse, status_code=200)
+@router.get("", response_model=MessagesPaginateResponse, status_code=200)
 def read_messages(
     session: SessionDep,
     conversation_id: str,
