@@ -1,0 +1,48 @@
+http:
+  routers:
+
+    adminer:
+      service: service-adminer
+      rule: "Host(`{{env "ADMINER_HOST"}}`)"
+      entryPoints:
+        - web
+
+    frontend:
+      service: service-frontend
+      rule: "Host(`{{env "FRONTEND_HOST"}}`)"
+      entryPoints:
+        - web
+
+    backend:
+      service: service-backend
+      rule: "Host(`{{env "BACKEND_HOST"}}`)"
+      entryPoints:
+        - web
+
+    auth:
+      service: service-auth
+      rule: "Host(`{{env "AUTH_HOST"}}`)"
+      entryPoints:
+        - web
+  
+  services:
+
+    service-adminer:
+      loadBalancer:
+        servers:
+          - url: "http://adminer:8080"
+          
+    service-frontend:
+      loadBalancer:
+        servers:
+          - url: "http://recall-frontend-dev:3000"
+
+    service-backend:
+      loadBalancer:
+        servers:
+          - url: "http://recall-backend-dev:8000"
+    
+    service-auth:
+      loadBalancer:
+        servers:
+          - url: "http://recall-auth-dev:8001"

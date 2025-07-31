@@ -2,12 +2,33 @@ name: "recall"
 
 services:
 
+  gateway:
+    container_name: recall-gateway-dev
+    image: traefik:v3.5
+    command:
+      - "--log.level=DEBUG" # Dev only
+      - "--entrypoints.web.address=:80" # Dev only
+      - "--api.insecure=true" # Dev only
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/"
+      - "--providers.file.watch=true"
+    ports:
+      - 80:80
+    env_file: ./gateway/.env.dev
+    networks:
+      - recall-dev-network
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./gateway/config.yaml:/etc/traefik/config.yaml"
+
   frontend:
     container_name: recall-frontend-dev
     build: ./frontend
     command: sh -c "npm run dev"
-    ports:
-      - 3000:3000
+    expose:
+      - 3000
     env_file: ./frontend/.env.dev
     networks:
       - recall-dev-network
@@ -21,6 +42,8 @@ services:
       - WDS_SOCKET_HOST=127.0.0.1
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
+    labels:
+      - "traefik.enable=true"
   
   backend:
     container_name: recall-backend-dev
@@ -32,8 +55,8 @@ services:
       - ./backend/app:/code/app
       - ./backend/logs:/code/logs
     restart: always
-    ports:
-      - 8001:8000
+    expose:
+      - 8000
     networks:
       - recall-dev-network
     logging:
@@ -44,38 +67,16 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      # ollama:
-      #   condition: service_healthy
-  
-  ollama:
-    container_name: recall-ollama-dev
-    image: ollama/ollama:latest
-    entrypoint: ["sh", "/init-ollama.sh"]
-    restart: always
-    ports:
-      - 11434:11434
-    networks:
-      - recall-dev-network
-    volumes:
-      - ollama_data:/root/.ollama
-      - ./scripts/init-ollama.sh:/init-ollama.sh:ro
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-      - OLLAMA_MODEL=gemma2:2b
-    # healthcheck:
-    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:11434/api/tags"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 5
-    #   start_period: 60s
+    labels:
+      - "traefik.enable=true"
 
   database:
     container_name: recall-database-dev
     image: postgres:16
     env_file: ./backend/.env.dev
     restart: always
-    ports:
-      - 5432:5432
+    expose:
+      - 5432
     networks:
       - recall-dev-network
     healthcheck:
@@ -84,14 +85,74 @@ services:
       timeout: 5s
       retries: 20
     volumes:
-      - ./data/database:/var/lib/postgresql/data
+      - recall_data:/var/lib/postgresql/data
+
+  auth:
+    container_name: recall-auth-dev
+    hostname: recall-auth-dev
+    build: ./auth
+    command: sh -c "alembic upgrade head && fastapi dev app/main.py --host 0.0.0.0 --port 8001 --reload"
+    env_file: ./auth/.env.dev
+    volumes:
+      - ./auth/app:/code/app
+    restart: always
+    expose:
+      - 8001
+    networks:
+      - recall-dev-network
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"
+        max-size: "10m"
+    depends_on:
+      database:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+
+  auth-database:
+    container_name: recall-auth-database-dev
+    image: postgres:16
+    command: ["postgres", "-c", "port=5433"]
+    env_file: ./auth/.env.dev
+    restart: always
+    expose:
+      - 5433
+    networks:
+      - recall-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+  
+  ollama:
+    container_name: recall-ollama-dev
+    image: ollama/ollama:latest
+    entrypoint: ["sh", "/init-ollama.sh"]
+    restart: always
+    expose:
+      - 11434
+    networks:
+      - recall-dev-network
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./scripts/init-ollama.sh:/init-ollama.sh:ro
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_MODEL=gemma2:2b
+    labels:
+      - "traefik.enable=true"
 
   adminer:
     container_name: adminer
     image: adminer
     restart: always
-    ports:
-      - 8082:8080
+    expose:
+      - 8080
     networks:
       - recall-dev-network
     environment:
@@ -99,6 +160,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
 
 networks:
   recall-dev-network:
@@ -106,4 +169,8 @@ networks:
 
 volumes:
   ollama_data:
+    driver: local
+  recall_data:
+    driver: local
+  auth_data:
     driver: local
