@@ -11,10 +11,11 @@ class Settings(BaseSettings):
     # Database
     SQLALCHEMY_DATABASE_URI: str = ""
 
-    # Ollama
-    OLLAMA_HOST: str = "http://ollama:11434"
-    OLLAMA_MODEL: str = "gemma2:2b"
-    OLLAMA_NUM_PREDICT: int = 100
+    # Auth
+    SECRET_KEY: str = ""
+    ALGORITHM: str = ""
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 0
+    SECURE_COOKIE: bool = False
 
 
 settings = Settings()
